@@ -1,0 +1,5 @@
+military
+large-vehicle
+small-vehicle
+plane
+helicopter
