@@ -99,10 +99,12 @@ class LabelFile(object):
                                  imageShape, localImgPath=imagePath)
         writer.verified = self.verified
 
+        print("_____________\n\n\n\n\n")
+        print(shapes)
         for shape in shapes:
             centre_x_y = shape['centre_x_y']
-            height = shape['height']
-            width = shape['width']
+            height =    shape['height']*0.99999
+            width =     shape['width']*0.99999
             angle = shape['angle']
             label = shape['label']
             # Add Chris

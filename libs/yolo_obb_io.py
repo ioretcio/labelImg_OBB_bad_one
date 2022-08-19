@@ -105,6 +105,8 @@ class YoloOBBReader:
         next(bndBoxFile) # Skip first line ("YOLO_OBB")
         for bndBox in bndBoxFile:
             classIndex, centre_x, centre_y, height, width, angle = bndBox.split(' ')
+            print(self.classes)
+            print(classIndex)
             label = self.classes[int(classIndex)]
 
             # Caveat: difficult flag is discarded when saved as yolo format.
