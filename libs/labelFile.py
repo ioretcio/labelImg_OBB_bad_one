@@ -103,8 +103,8 @@ class LabelFile(object):
         print(shapes)
         for shape in shapes:
             centre_x_y = shape['centre_x_y']
-            height =    shape['height']*0.99999
-            width =     shape['width']*0.99999
+            height =    shape['height']*0.999
+            width =     shape['width']*0.999
             angle = shape['angle']
             label = shape['label']
             # Add Chris
