@@ -107,6 +107,12 @@ class MainWindow(QMainWindow, WindowMixin):
         self.labelHist = []
         self.lastOpenDir = None
 
+        # For img count and checkpoint (last labeled img)
+        self.curImgIndex = 0 
+        self.maxImgIndex = 0 
+        self.imgCount = len(self.mImgList)
+        self.checkpoint_img = ''
+        
         # Whether we need to save or not.
         self.dirty = False
 
@@ -296,6 +302,7 @@ class MainWindow(QMainWindow, WindowMixin):
         fitWidth = action(getStr('fitWidth'), self.setFitWidth,
                           'Ctrl+Shift+F', 'fit-width', getStr('fitWidthDetail'),
                           checkable=True, enabled=False)
+        
         # Group zoom controls into a list for easier toggling.
         zoomActions = (self.zoomWidget, zoomIn, zoomOut,
                        zoomOrg, fitWindow, fitWidth)
@@ -704,6 +711,7 @@ class MainWindow(QMainWindow, WindowMixin):
     # Tzutalin 20160906 : Add file list and dock to move faster
     def fileitemDoubleClicked(self, item=None):
         currIndex = self.mImgList.index(ustr(item.text()))
+        self.curImgIndex = currIndex + 1
         if currIndex < len(self.mImgList):
             filename = self.mImgList[currIndex]
             if filename:
@@ -1042,7 +1050,7 @@ class MainWindow(QMainWindow, WindowMixin):
         self.canvas.setEnabled(False)
         if filePath is None:
             filePath = self.settings.get(SETTING_FILENAME)
-
+                    
         # Make sure that filePath is a regular python string, rather than QString
         filePath = ustr(filePath)
 
@@ -1127,8 +1135,10 @@ class MainWindow(QMainWindow, WindowMixin):
                             self.loadYOLOTOBBXTByFilename(txtPath)
                         else:
                             self.loadYOLOTXTByFilename(txtPath)
-
-            self.setWindowTitle(__appname__ + ' ' + filePath)
+            
+            # proportion of viewed photos and percentage
+            counter = f'[{self.curImgIndex} / {self.imgCount}] - {(self.curImgIndex)/self.imgCount*100:.1f}%'
+            self.setWindowTitle(f'{__appname__}  {filePath}\t{counter}')
 
             # Default : select last item if there is at least one item
             if self.labelList.count():
@@ -1138,6 +1148,7 @@ class MainWindow(QMainWindow, WindowMixin):
             self.canvas.setFocus(True)
             return True
         return False
+
 
     def resizeEvent(self, event):
         if self.canvas and not self.image.isNull()\
@@ -1219,6 +1230,7 @@ class MainWindow(QMainWindow, WindowMixin):
                     relativePath = os.path.join(root, file)
                     path = ustr(os.path.abspath(relativePath))
                     images.append(path)
+                    
         images.sort(key=lambda x: x.lower())
         return images
 
@@ -1279,6 +1291,7 @@ class MainWindow(QMainWindow, WindowMixin):
         self.filePath = None
         self.fileListWidget.clear()
         self.mImgList = self.scanAllImages(dirpath)
+        self.imgCount = len(self.mImgList)
         self.openNextImg()
         for imgPath in self.mImgList:
             item = QListWidgetItem(imgPath)
@@ -1320,12 +1333,14 @@ class MainWindow(QMainWindow, WindowMixin):
 
         if self.filePath is None:
             return
-
+        
         currIndex = self.mImgList.index(self.filePath)
         if currIndex - 1 >= 0:
             filename = self.mImgList[currIndex - 1]
             if filename:
-                self.loadFile(filename)
+                self.curImgIndex -= 1     
+                self.loadFile(filename)    
+                                  
 
     def openNextImg(self, _value=False):
         # Proceding prev image without dialog if having any label
@@ -1346,13 +1361,23 @@ class MainWindow(QMainWindow, WindowMixin):
         filename = None
         if self.filePath is None:
             filename = self.mImgList[0]
+            self.curImgIndex = 0
         else:
             currIndex = self.mImgList.index(self.filePath)
+            #self.curImgIndex = self.mImgList.index(self.filePath)
             if currIndex + 1 < len(self.mImgList):
                 filename = self.mImgList[currIndex + 1]
 
         if filename:
-            self.loadFile(filename)
+            self.curImgIndex += 1
+            '''
+            TODO:make logic for setting checkpoint
+            if you scrolled to the right and then go back — that's probably not checkpoint, 
+            just a peek into data, so there should be a certain range
+            '''
+            self.maxImgIndex = self.curImgIndex if (self.curImgIndex > self.maxImgIndex) else self.maxImgIndex
+            self.loadFile(filename)            
+
 
     def openFile(self, _value=False):
         if not self.mayContinue():
@@ -1363,8 +1388,10 @@ class MainWindow(QMainWindow, WindowMixin):
         filename = QFileDialog.getOpenFileName(self, '%s - Choose Image or Label file' % __appname__, path, filters)
         if filename:
             if isinstance(filename, (tuple, list)):
-                filename = filename[0]
+                filename = filename[0]            
+            self.imgCount = 1
             self.loadFile(filename)
+
 
     def saveFile(self, _value=False):
         if self.defaultSaveDir is not None and len(ustr(self.defaultSaveDir)):
@@ -1549,11 +1576,12 @@ def read(filename, default=None):
 
 
 def get_main_app(argv=[]):
+    
     """
     Standard boilerplate Qt application code.
     Do everything but app.exec_() -- so that we can test the application in one thread
     """
-    app = QApplication(argv)
+    app = QApplication(argv)   
     app.setApplicationName(__appname__)
     app.setWindowIcon(newIcon("app"))
     # Tzutalin 201705+: Accept extra agruments to change predefined class file
@@ -1563,8 +1591,25 @@ def get_main_app(argv=[]):
                          os.path.dirname(sys.argv[0]),
                          'data', 'predefined_classes.txt'),
                      argv[3] if len(argv) >= 4 else None)
+    
+    SetNightTheme(app, win)
+    
     win.show()
     return app, win
+
+def SetNightTheme(application: QApplication, window: MainWindow):
+    '''Everything except zoomWidget and title bar'''
+    palette = QPalette()
+    palette.setColor(QPalette.Window, QColor(53, 53, 53))
+    palette.setColor(QPalette.WindowText, Qt.white)
+    palette.setColor(QPalette.Base, QColor(25, 25, 25))    
+    palette.setColor(QPalette.AlternateBase, QColor(53, 53, 53))
+    palette.setColor(QPalette.Text, Qt.white)
+    palette.setColor(QPalette.Button, QColor(53, 53, 53))
+    palette.setColor(QPalette.ButtonText, Qt.white)    
+    
+    application.setStyle("Fusion")
+    application.setPalette(palette)  
 
 # To restore PyQt4 behaviour of printing the traceback to stdout/stderr
 def except_hook(cls, exception, traceback):
