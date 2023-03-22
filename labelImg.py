@@ -115,7 +115,7 @@ class MainWindow(QMainWindow, WindowMixin):
         
         # Whether we need to save or not.
         self.dirty = False
-
+      
         self._noSelectionSlot = False
         self._beginner = True
         self.screencastViewer = self.getAvailableScreencastViewer()
@@ -466,6 +466,8 @@ class MainWindow(QMainWindow, WindowMixin):
         self.canvas.setDrawingColor(self.lineColor)
         # Add chris
         Shape.difficult = self.difficult
+        # self.showFullScreen()
+
 
         def xbool(x):
             if isinstance(x, QVariant):
