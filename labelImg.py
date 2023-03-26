@@ -81,6 +81,7 @@ class WindowMixin(object):
 
 class MainWindow(QMainWindow, WindowMixin):
     FIT_WINDOW, FIT_WIDTH, MANUAL_ZOOM = list(range(3))
+   
 
     def __init__(self, defaultFilename=None, defaultPrefdefClassFile=None, defaultSaveDir=None):
         super(MainWindow, self).__init__()
@@ -106,16 +107,12 @@ class MainWindow(QMainWindow, WindowMixin):
         self.dirname = None
         self.labelHist = []
         self.lastOpenDir = None
+        self.cur_img_idx = 0 #<<<<<<<
+        self.img_count = len(self.mImgList) #<<<<<<<
 
-        # For img count and checkpoint (last labeled img)
-        self.curImgIndex = 0 
-        self.maxImgIndex = 0 
-        self.imgCount = len(self.mImgList)
-        self.checkpoint_img = ''
-        
         # Whether we need to save or not.
         self.dirty = False
-      
+
         self._noSelectionSlot = False
         self._beginner = True
         self.screencastViewer = self.getAvailableScreencastViewer()
@@ -234,7 +231,12 @@ class MainWindow(QMainWindow, WindowMixin):
 
         openPrevImg = action(getStr('prevImg'), self.openPrevImg,
                              'a', 'prev', getStr('prevImgDetail'))
-
+        
+        ### own huinya 
+        renewImg = action('Renew Image', self.renewImg,
+                             'Ctrl+N', 'renew', 'Renew Image from config')
+        ###
+        
         verify = action(getStr('verifyImg'), self.verifyImg,
                         'v', 'verify', getStr('verifyImgDetail'))
 
@@ -266,6 +268,7 @@ class MainWindow(QMainWindow, WindowMixin):
         copy = action(getStr('dupBox'), self.copySelectedShape,
                       'Ctrl+D', 'copy', getStr('dupBoxDetail'),
                       enabled=False)
+        
 
         advancedMode = action(getStr('advancedMode'), self.toggleAdvancedMode,
                               'Ctrl+Shift+A', 'expert', getStr('advancedModeDetail'),
@@ -302,7 +305,6 @@ class MainWindow(QMainWindow, WindowMixin):
         fitWidth = action(getStr('fitWidth'), self.setFitWidth,
                           'Ctrl+Shift+F', 'fit-width', getStr('fitWidthDetail'),
                           checkable=True, enabled=False)
-        
         # Group zoom controls into a list for easier toggling.
         zoomActions = (self.zoomWidget, zoomIn, zoomOut,
                        zoomOrg, fitWindow, fitWidth)
@@ -410,12 +412,15 @@ class MainWindow(QMainWindow, WindowMixin):
             action('&Move here', self.moveShape)))
 
         self.tools = self.toolbar('Tools')
+        
+        ### own huinya openPrevImg, renewImg, verify
         self.actions.beginner = (
-            open, opendir, changeSavedir, openNextImg, openPrevImg, verify, save, save_format, None, create, copy, delete, None,
+            open, opendir, changeSavedir, openNextImg, openPrevImg, renewImg, verify, save, save_format, None, create, copy, delete, None,
             zoomIn, zoom, zoomOut, fitWindow, fitWidth)
 
+        ### own huinya openPrevImg, renewImg, save
         self.actions.advanced = (
-            open, opendir, changeSavedir, openNextImg, openPrevImg, save, save_format, None,
+            open, opendir, changeSavedir, openNextImg, openPrevImg, renewImg, save, save_format, None,
             createMode, editMode, None,
             hideAll, showAll)
 
@@ -466,8 +471,6 @@ class MainWindow(QMainWindow, WindowMixin):
         self.canvas.setDrawingColor(self.lineColor)
         # Add chris
         Shape.difficult = self.difficult
-        # self.showFullScreen()
-
 
         def xbool(x):
             if isinstance(x, QVariant):
@@ -713,11 +716,27 @@ class MainWindow(QMainWindow, WindowMixin):
     # Tzutalin 20160906 : Add file list and dock to move faster
     def fileitemDoubleClicked(self, item=None):
         currIndex = self.mImgList.index(ustr(item.text()))
-        self.curImgIndex = currIndex + 1
+        
         if currIndex < len(self.mImgList):
+            self.cur_img_idx = self.mImgList.index(ustr(item.text()))    
+            
             filename = self.mImgList[currIndex]
             if filename:
                 self.loadFile(filename)
+            
+            ### own huinya
+            
+            
+            try:
+                # Update the last_edited parameter and write to a file
+                self.config_default['DEFAULT']['last_edited'] = str(self.cur_img_idx)
+                with open(self.defaultSaveDir + '/current_config.cfg', 'w') as configfile:
+                    self.config_default.write(configfile)
+                print(f'last_edited = {self.cur_img_idx}')
+            finally:
+                return
+            
+            ###
 
     # Add chris
     def btnstate(self, item= None):
@@ -1052,7 +1071,7 @@ class MainWindow(QMainWindow, WindowMixin):
         self.canvas.setEnabled(False)
         if filePath is None:
             filePath = self.settings.get(SETTING_FILENAME)
-                    
+
         # Make sure that filePath is a regular python string, rather than QString
         filePath = ustr(filePath)
 
@@ -1137,10 +1156,9 @@ class MainWindow(QMainWindow, WindowMixin):
                             self.loadYOLOTOBBXTByFilename(txtPath)
                         else:
                             self.loadYOLOTXTByFilename(txtPath)
-            
-            # proportion of viewed photos and percentage
-            counter = f'[{self.curImgIndex} / {self.imgCount}] - {(self.curImgIndex)/self.imgCount*100:.1f}%'
-            self.setWindowTitle(f'{__appname__}  {filePath}\t{counter}')
+
+            counter = self.counter_str()
+            self.setWindowTitle(__appname__ + ' ' + filePath + ' ' + counter) #rorate
 
             # Default : select last item if there is at least one item
             if self.labelList.count():
@@ -1151,6 +1169,11 @@ class MainWindow(QMainWindow, WindowMixin):
             return True
         return False
 
+    def counter_str(self):
+        """
+        Converts image counter to string representation.
+        """
+        return '[{} / {}]'.format(self.cur_img_idx + 1, self.img_count)
 
     def resizeEvent(self, event):
         if self.canvas and not self.image.isNull()\
@@ -1232,7 +1255,6 @@ class MainWindow(QMainWindow, WindowMixin):
                     relativePath = os.path.join(root, file)
                     path = ustr(os.path.abspath(relativePath))
                     images.append(path)
-                    
         images.sort(key=lambda x: x.lower())
         return images
 
@@ -1245,9 +1267,31 @@ class MainWindow(QMainWindow, WindowMixin):
         dirpath = ustr(QFileDialog.getExistingDirectory(self,
                                                        '%s - Save annotations to the directory' % __appname__, path,  QFileDialog.ShowDirsOnly
                                                        | QFileDialog.DontResolveSymlinks))
-
+        
         if dirpath is not None and len(dirpath) > 1:
             self.defaultSaveDir = dirpath
+            
+            ### own huinya
+
+            import configparser
+            self.config_default = configparser.ConfigParser()
+
+            # Check if the current_config.cfg file exists
+            if not os.path.exists(self.defaultSaveDir + '/current_config.cfg'):
+                # If the file does not exist, create and write the parameter last_edited = 0
+                self.config_default['DEFAULT'] = {'last_edited': '0'}
+                with open(self.defaultSaveDir + '/current_config.cfg', 'w') as configfile:
+                    self.config_default.write(configfile)
+                    
+                self.last_edited = 0 
+                print(f"last_edited = {self.last_edited}")
+            else:
+                # If the file exists, read the last_edited parameter from the file
+                self.config_default.read(self.defaultSaveDir + '/current_config.cfg')
+                self.last_edited = self.config_default.getint('DEFAULT', 'last_edited')
+                print(f"last_edited = {self.last_edited}")
+            
+            ###
 
         self.statusBar().showMessage('%s . Annotation will be saved to %s' %
                                      ('Change saved folder', self.defaultSaveDir))
@@ -1292,8 +1336,8 @@ class MainWindow(QMainWindow, WindowMixin):
         self.dirname = dirpath
         self.filePath = None
         self.fileListWidget.clear()
-        self.mImgList = self.scanAllImages(dirpath)
-        self.imgCount = len(self.mImgList)
+        self.mImgList = sorted(self.scanAllImages(dirpath))
+        self.img_count = len(self.mImgList) ## <<<<<<<<<
         self.openNextImg()
         for imgPath in self.mImgList:
             item = QListWidgetItem(imgPath)
@@ -1335,15 +1379,30 @@ class MainWindow(QMainWindow, WindowMixin):
 
         if self.filePath is None:
             return
-        
+
         currIndex = self.mImgList.index(self.filePath)
+        
         if currIndex - 1 >= 0:
+            
+            self.cur_img_idx = currIndex-1
+            
             filename = self.mImgList[currIndex - 1]
             if filename:
-                self.curImgIndex -= 1     
-                self.loadFile(filename)    
-                                  
-
+                self.loadFile(filename)
+                
+            ### own huinya
+            
+            try:
+                # Update the last_edited parameter and write to a file
+                self.config_default['DEFAULT']['last_edited'] = str(self.cur_img_idx)
+                self.last_edited = self.cur_img_idx
+                with open(self.defaultSaveDir + '/current_config.cfg', 'w') as configfile:
+                    self.config_default.write(configfile)
+                print(f'last_edited = {self.cur_img_idx}')
+            finally:
+                return
+            ###
+            
     def openNextImg(self, _value=False):
         # Proceding prev image without dialog if having any label
         if self.autoSaving.isChecked():
@@ -1363,24 +1422,49 @@ class MainWindow(QMainWindow, WindowMixin):
         filename = None
         if self.filePath is None:
             filename = self.mImgList[0]
-            self.curImgIndex = 0
+            currIndex = 0
         else:
             currIndex = self.mImgList.index(self.filePath)
-            #self.curImgIndex = self.mImgList.index(self.filePath)
+            
             if currIndex + 1 < len(self.mImgList):
-                filename = self.mImgList[currIndex + 1]
-
+                ### own huinya
+                
+                self.cur_img_idx = currIndex+1
+                
+                try:
+                    #Update the last_edited parameter and write to a file
+                    self.config_default['DEFAULT']['last_edited'] = str(self.cur_img_idx)
+                    self.last_edited = self.cur_img_idx
+                    with open(self.defaultSaveDir + '/current_config.cfg', 'w') as configfile:
+                        self.config_default.write(configfile)
+                    print(f'last_edited = {self.cur_img_idx}')
+                finally:
+                    filename = self.mImgList[currIndex + 1]
+                    
+                ###
+                
         if filename:
-            self.curImgIndex += 1
-            '''
-            TODO:make logic for setting checkpoint
-            if you scrolled to the right and then go back — that's probably not checkpoint, 
-            just a peek into data, so there should be a certain range
-            '''
-            self.maxImgIndex = self.curImgIndex if (self.curImgIndex > self.maxImgIndex) else self.maxImgIndex
-            self.loadFile(filename)            
+            self.loadFile(filename)
+            
+    ### own huinya        
+    def renewImg(self, _value=False):
+        try:
+            filename = None
+            if self.filePath is None:
+                return
+            else:
+                currIndex = self.last_edited
+                
+                if currIndex < len(self.mImgList):
+                    self.cur_img_idx = currIndex
+                    filename = self.mImgList[currIndex]
 
-
+            if filename:
+                self.loadFile(filename)
+        finally:
+            return
+    ###
+        
     def openFile(self, _value=False):
         if not self.mayContinue():
             return
@@ -1390,10 +1474,10 @@ class MainWindow(QMainWindow, WindowMixin):
         filename = QFileDialog.getOpenFileName(self, '%s - Choose Image or Label file' % __appname__, path, filters)
         if filename:
             if isinstance(filename, (tuple, list)):
-                filename = filename[0]            
-            self.imgCount = 1
+                filename = filename[0]
+            self.cur_img_idx = 0
+            self.img_count = 1
             self.loadFile(filename)
-
 
     def saveFile(self, _value=False):
         if self.defaultSaveDir is not None and len(ustr(self.defaultSaveDir)):
@@ -1578,12 +1662,11 @@ def read(filename, default=None):
 
 
 def get_main_app(argv=[]):
-    
     """
     Standard boilerplate Qt application code.
     Do everything but app.exec_() -- so that we can test the application in one thread
     """
-    app = QApplication(argv)   
+    app = QApplication(argv)
     app.setApplicationName(__appname__)
     app.setWindowIcon(newIcon("app"))
     # Tzutalin 201705+: Accept extra agruments to change predefined class file
@@ -1593,11 +1676,10 @@ def get_main_app(argv=[]):
                          os.path.dirname(sys.argv[0]),
                          'data', 'predefined_classes.txt'),
                      argv[3] if len(argv) >= 4 else None)
-    
     SetNightTheme(app, win)
-    
     win.show()
     return app, win
+
 
 def SetNightTheme(application: QApplication, window: MainWindow):
     '''Everything except zoomWidget and title bar'''
@@ -1611,7 +1693,12 @@ def SetNightTheme(application: QApplication, window: MainWindow):
     palette.setColor(QPalette.ButtonText, Qt.white)    
     
     application.setStyle("Fusion")
-    application.setPalette(palette)  
+    application.setPalette(palette) 
+
+
+
+
+
 
 # To restore PyQt4 behaviour of printing the traceback to stdout/stderr
 def except_hook(cls, exception, traceback):
