@@ -47,13 +47,26 @@
 
 
 - Обираєте клас зі списку що з'являється.
+<p align="center">
+  <img src="https://github.com/ioretcio/labelImg_OBB_bad_one/blob/master/resources/md_jpegs/select.png?raw=true" alt="Sublime's custom image"/>
+</p>
+-----------
 
+"Хватаючись за центр" - змінити розташування
+<p align="center">
+  <img src="https://github.com/ioretcio/labelImg_OBB_bad_one/blob/master/resources/md_jpegs/resize.png?raw=true" alt="Sublime's custom image"/>
+</p>
 -----------
 "Тримаючись за куточки":
+
 - лівою кнопкою миші - змінити розмір
+<p align="center">
+  <img src="https://github.com/ioretcio/labelImg_OBB_bad_one/blob/master/resources/md_jpegs/resize2.png?raw=true" alt="Sublime's custom image"/>
+</p>
 - правою кнопкою миші - прокрутити
------------
-"Хватаючись за центр" - змінити розташування
+<p align="center">
+  <img src="https://github.com/ioretcio/labelImg_OBB_bad_one/blob/master/resources/md_jpegs/fit.png?raw=true" alt="Sublime's custom image"/>
+</p>
 
 -----------
 
@@ -64,10 +77,15 @@
 
 - `A` - попереднє фото
 - `D` - наступне фото
+(або кнопки зі стрілочками)
+<p align="center">
+  <img src="https://github.com/ioretcio/labelImg_OBB_bad_one/blob/master/resources/md_jpegs/arrows.png?raw=true" alt="Sublime's custom image"/>
+</p>
 
 ----------
 
 - Затискання коліщатка миші + перетягування - перетягування картинки
+
 - Затискання Alt  + перетягування лівою кнопкою миші - перетягування картинки
 
 ---------
@@ -84,5 +102,5 @@
 
 ---------
 
-- Кнопка `Save`, або комбінація `Ctrl+S` - зберегти зображення для переходу до наступного
+- Кнопка `Save`, або комбінація `Ctrl+S` - зберегти зображення перед переходом до наступного, або перед виходом зі застосунку.
 
