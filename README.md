@@ -3,6 +3,11 @@
 Натисніть подвійним кліком по `____script3_startTool.cmd`
 Або команда в консолі `python labelImg.py` в директорії з скриптом
 
+<p align="center">
+  <img src="https://github.com/ioretcio/labelImg_OBB_bad_one/blob/master/resources/md_jpegs/window.png?raw=true" alt="Sublime's custom image"/>
+</p>
+Вікно застосунку.
+
 ## #2 - Відкриття директорії зі зображеннями.
 
 <p align="center">
