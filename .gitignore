@@ -11,6 +11,7 @@ labelImg.egg-info*
 build/
 dist/
 venv/
+env/
 
 tags
 cscope*

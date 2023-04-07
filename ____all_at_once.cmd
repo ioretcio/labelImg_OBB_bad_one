@@ -1,0 +1,3 @@
+____script1_initLocalEnvironment.cmd
+____script2_setupReqs.cmd
+____script3_startTool.cmd

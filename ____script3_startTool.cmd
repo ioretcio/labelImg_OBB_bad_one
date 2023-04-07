@@ -1,0 +1,1 @@
+env\Scripts\python labelImg.py
