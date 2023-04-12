@@ -462,7 +462,7 @@ class MainWindow(QMainWindow, WindowMixin):
         if self.defaultSaveDir is None and saveDir is not None and os.path.exists(saveDir):
             self.defaultSaveDir = saveDir
             self.statusBar().showMessage('%s started. Annotation will be saved to %s' %
-                                         (__appname__, self.defaultSaveDir))
+                                        (__appname__, self.defaultSaveDir))
             self.statusBar().show()
 
         self.restoreState(settings.get(SETTING_WIN_STATE, QByteArray()))
@@ -665,7 +665,6 @@ class MainWindow(QMainWindow, WindowMixin):
         self.actions.editMode.setEnabled(not drawing)
         if not drawing and self.beginner():
             # Cancel creation.
-            print('Cancel creation.')
             self.canvas.setEditing(True)
             self.canvas.restoreCursor()
             self.actions.create.setEnabled(True)
@@ -1626,7 +1625,7 @@ class MainWindow(QMainWindow, WindowMixin):
         self.set_format(FORMAT_YOLO)
         tYoloParseReader = YoloReader(txtPath, self.image)
         shapes = tYoloParseReader.getShapes()
-        print (shapes)
+
         self.loadLabels(shapes)
         
     def loadYOLOTOBBXTByFilename(self, txtPath):
@@ -1638,7 +1637,7 @@ class MainWindow(QMainWindow, WindowMixin):
         self.set_format(FORMAT_YOLO_OBB)
         tYoloOBBParseReader = YoloOBBReader(txtPath, self.image)
         shapes = tYoloOBBParseReader.getShapes()
-        print (shapes)
+
         self.loadOBBLabels(shapes)
         self.canvas.verified = tYoloOBBParseReader.verified
 
