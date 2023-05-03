@@ -1,6 +1,6 @@
 ## #1 - Запуск софта.
 
-Натисніть подвійним кліком по `____script3_startTool.cmd`
+Натисніть подвійним кліком по '____script2_startTool.cmd'
 Або команда в консолі `python labelImg.py` в директорії з скриптом
 
 <p align="center">
