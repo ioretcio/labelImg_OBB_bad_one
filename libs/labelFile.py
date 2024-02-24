@@ -98,9 +98,6 @@ class LabelFile(object):
         writer = YOLOOBBWriter(imgFolderName, imgFileName,
                                  imageShape, localImgPath=imagePath)
         writer.verified = self.verified
-
-        print("_____________\n\n\n\n\n")
-        print(shapes)
         for shape in shapes:
             centre_x_y = shape['centre_x_y']
             height =    shape['height']*0.999

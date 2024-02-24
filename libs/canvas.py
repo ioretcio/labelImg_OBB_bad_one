@@ -665,7 +665,6 @@ class Canvas(QWidget):
             self.drawingPolygon.emit(False)
             self.update()
         elif key == Qt.Key_Return and self.canCloseShape():
-            print("LOL")
             self.finalise()
         elif key == Qt.Key_Left and self.selectedShape:
             self.moveOnePixel('Left')
