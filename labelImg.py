@@ -1172,7 +1172,7 @@ class MainWindow(QMainWindow, WindowMixin):
         """
         Converts image counter to string representation.
         """
-        return '[{} / {}] approx {}'.format(self.cur_img_idx + 1, self.img_count, f'{(self.cur_img_idx)/self.img_count*100:.1f}%')
+        return '[{} / {}] ~ {}'.format(self.cur_img_idx + 1, self.img_count, f'{(self.cur_img_idx+ 1)/self.img_count*100:.1f}%')
 
     def resizeEvent(self, event):
         if self.canvas and not self.image.isNull()\
